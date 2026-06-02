@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tyndall"
+version = "0.1.0"
+description = "Weather Prediction"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "torch"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

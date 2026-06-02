@@ -1,0 +1,39 @@
+# Local
+checkpoints/
+data/
+scratch/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual envs
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Model / data caches
+.cache/
+hf_cache/
+wandb/
+
+# OS
+.DS_Store
+
+# Large artifacts
+*.pt
+*.pth
+*.npy
+*.npz
+
+# Editable install metadata
+*.egg-info/
+src/*.egg-info/
+
+# HuggingFace / data cache
+data_cache/
