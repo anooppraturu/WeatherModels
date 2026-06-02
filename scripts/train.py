@@ -6,7 +6,7 @@ from torch import optim
 
 from tyndall.data import build_loaders
 from tyndall.models import build_model
-from tyndall.train_utils import train_model
+from tyndall.train_utils import train_model, get_device
 
 def build_optimizer(config, model):
     opt_cfg = config["optimizer"]
@@ -34,6 +34,7 @@ def main():
     train_loader, val_loader = build_loaders(config)
     optimizer = build_optimizer(config, model)
     criterion = nn.MSELoss()
+    device = get_device(config["training"]["device"])
 
     train_cfg = config["training"]
 
@@ -46,7 +47,8 @@ def main():
         epochs=train_cfg["epochs"],
         log_every=train_cfg["log_every"],
         val_every=train_cfg["val_every"],
-        ckpt_dir=config["project"]["output_dir"]
+        ckpt_dir=config["project"]["output_dir"],
+        device=device
     )
 
 if __name__ == "__main__":

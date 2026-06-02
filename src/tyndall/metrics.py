@@ -40,13 +40,20 @@ def rollout_rmse(trajectory, start_idx, dataset, n_vars = 4):
 
 
 @torch.no_grad()
-def compute_validation_loss(model, loss_fn, val_loader):
+def compute_validation_loss(model, loss_fn, val_loader, device):
     N = 0
     val_loss = 0
 
+    model.eval()
+    model.to(device)
+
     for xb, yb in val_loader:
+        xb = xb.to(device)
+        yb = yb.to(device)
+
         B = xb.shape[0]
         N += B
+
         preds = model(xb)
         loss = loss_fn(preds, yb)
         val_loss += B*loss.item()

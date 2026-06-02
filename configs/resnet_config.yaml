@@ -32,6 +32,7 @@ optimizer:
 training:
   epochs: 1
   log_every: 20
-  val_every: 100
+  val_every: 20
   patience: 10
   min_delta: 0.0
+  device: auto

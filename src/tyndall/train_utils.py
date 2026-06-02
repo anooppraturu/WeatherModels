@@ -87,9 +87,11 @@ def train_model(
     log_every=100,
     val_every=100,
     ckpt_dir="./",
-    device="cpu"
+    device=torch.device("cpu"),
 ):
     # use defaults for now
+    print(f"Training for {epochs} epochs on device {device}")
+    model.to(device)
     early_stopper = EarlyStopping()
     global_step = 0
     ckpt_dir = Path(ckpt_dir)
@@ -100,6 +102,9 @@ def train_model(
         pbar = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}")
 
         for xb, yb in pbar:
+            xb = xb.to(device)
+            yb = yb.to(device)
+
             preds = model(xb)
             loss = loss_fn(preds, yb)
 
@@ -113,7 +118,9 @@ def train_model(
                 print(f"Step {global_step}, train batch loss = {loss.item():.6f}")
 
             if global_step % val_every == 0:
-                validation_loss = compute_validation_loss(model, loss_fn, val_loader)
+                validation_loss = compute_validation_loss(
+                    model=model, loss_fn=loss_fn, val_loader=val_loader, device=device
+                )
                 improved = early_stopper.step(validation_loss)
 
                 if improved:
@@ -138,7 +145,6 @@ def train_model(
 
                 print(f"Step {global_step}, validation loss={validation_loss:.6f}")
 
-        
     save_checkpoint(
         path=ckpt_dir / "last.pt",
         model=model,
@@ -147,4 +153,3 @@ def train_model(
         global_step=global_step,
         best_metric=validation_loss,
     )
-
