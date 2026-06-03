@@ -1,16 +1,8 @@
-import random
 from pathlib import Path
 from tqdm import tqdm
-import numpy as np
 import torch
 
 from .metrics import compute_validation_loss
-
-
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
 
 
 def get_device(device_config="auto"):

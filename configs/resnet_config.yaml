@@ -1,7 +1,7 @@
 project:
-  run_name: deep_resnet_baseline
+  run_name: resnet_baseline
   seed: 42
-  output_dir: checkpoints/script_test
+  output_dir: checkpoints/
 
 data:
   dataset_path: data/weatherbench64_shards
@@ -36,3 +36,9 @@ training:
   patience: 10
   min_delta: 0.0
   device: auto
+
+mlflow:
+  enabled: true
+  tracking_uri: sqlite:///mlflow.db
+  experiment_name: dev
+  artifact_dir: mlartifacts

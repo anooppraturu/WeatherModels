@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
+from .utils import _to_numpy
+
 
 @torch.no_grad()
 def autoregressive_rollout(model, x_init, nsteps, n_var=4):
@@ -16,12 +18,6 @@ def autoregressive_rollout(model, x_init, nsteps, n_var=4):
         x = torch.cat([x[:, -n_var*3:], x_next], dim=1)
 
     return torch.cat(trajectory, dim=0)
-
-
-def _to_numpy(x):
-    if isinstance(x, torch.Tensor):
-        return x.detach().cpu().numpy()
-    return np.asarray(x)
 
 
 def make_rollout_gif(

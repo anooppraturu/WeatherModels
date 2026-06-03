@@ -2,6 +2,7 @@
 checkpoints/
 data/
 scratch/
+*.db
 
 # Python
 __pycache__/

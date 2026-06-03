@@ -1,5 +1,6 @@
 import torch
 
+@torch.no_grad()
 def per_variable_batch_rmse(yhat, y):
     """
     yhat: (B, variable, latitude, longitude)
@@ -7,6 +8,7 @@ def per_variable_batch_rmse(yhat, y):
     """
     return torch.sqrt(((yhat - y)**2).mean(dim=(0, 2, 3)))
 
+@torch.no_grad()
 def per_variable_time_rmse(yhat, y):
     """
     yhat: (time, variable, latitude, longitude)
@@ -15,21 +17,34 @@ def per_variable_time_rmse(yhat, y):
     return torch.sqrt(((yhat - y)**2).mean(dim=(2, 3)))
 
 @torch.no_grad()
-def total_variable_rmse(fn, loader):
+def total_variable_rmse(model, loader, device):
     """
     fn: function to make predictions
-    loader: torch DataLoader to copmute RMSE on
+    loader: torch DataLoader to compute RMSE on
     """
     N = 0
     all_rmses = []
 
     for i, (xb, yb) in enumerate(loader):
-        N += xb.shape[0]
-        yhat = fn(xb)
-        var_rmse = per_variable_batch_rmse(yhat, yb)
+        xb = xb.to(device)
+        yb = yb.to(device)
+
+        B = xb.shape[0]
+        N += B
+        yhat = model(xb)
+        var_rmse = B*per_variable_batch_rmse(yhat, yb)
         all_rmses.append(var_rmse)
 
-    return torch.stack(all_rmses).sum(dim=0) / N
+    mean_rmses = torch.stack(all_rmses).sum(dim=0) / N
+
+    # metric structure hardcoded for now
+    metrics = {
+        "T850_rmse": mean_rmses[0],
+        "U850_rmse": mean_rmses[1],
+        "V850_rmse": mean_rmses[2],
+        "Z500_rmse": mean_rmses[3]
+    }
+    return metrics
 
 
 def rollout_rmse(trajectory, start_idx, dataset, n_vars = 4):
