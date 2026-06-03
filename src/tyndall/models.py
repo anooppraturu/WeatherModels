@@ -20,7 +20,7 @@ class ConvModel(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    def __init__(self, channels, kernel_size=3, padding=1, residual_scale=1.0):
+    def __init__(self, channels, kernel_size=3, padding=1, residual_scale=1.0, post_nl=True):
         super().__init__()
         self.residual_scale = residual_scale
 
@@ -41,14 +41,16 @@ class ResidualBlock(nn.Module):
             ),
             nn.BatchNorm2d(channels)
         )
-        self.act = nn.GELU()
+        if post_nl:
+            self.act = nn.GELU()
+        else:
+            self.act = nn.Identity()
 
     def forward(self, x):
         return self.act(x + self.residual_scale * self.net(x))
 
 
 class DeepResNet(nn.Module):
-    # TODO make kernel_size and padding configurable (maybe only kernel size and padding follows from size constraints?)
     def __init__(
         self,
         in_channels,
@@ -59,6 +61,7 @@ class DeepResNet(nn.Module):
         depth=5,
         predict_residual=True,
         residual_scale=1.0,
+        post_nl=True
     ):
         super().__init__()
         self.predict_residual = predict_residual
@@ -71,6 +74,7 @@ class DeepResNet(nn.Module):
                 kernel_size=kernel_size,
                 padding=padding,
             ),
+            nn.BatchNorm2d(hidden_channels),
             nn.GELU(),
         ]
 
@@ -81,6 +85,7 @@ class DeepResNet(nn.Module):
                     kernel_size=kernel_size,
                     padding=padding,
                     residual_scale=residual_scale,
+                    post_nl=post_nl
                 )
             )
 
@@ -105,18 +110,20 @@ class DeepResNet(nn.Module):
 
 
 def build_model(config):
-    name = config["model"]["architecture"]
+    model_cfg = config["model"]
+    name = model_cfg["architecture"]
 
     if name == "deepresnet":
         return DeepResNet(
-            in_channels=config["model"]["in_channels"],
-            out_channels=config["model"]["out_channels"],
-            hidden_channels=config["model"]["hidden_channels"],
-            kernel_size=config["model"]["kernel_size"],
-            padding=config["model"]["padding"],
-            depth=config["model"]["depth"],
-            predict_residual=config["model"]["predict_residual"],
-            residual_scale=config["model"]["residual_scale"],
+            in_channels=model_cfg["in_channels"],
+            out_channels=model_cfg["out_channels"],
+            hidden_channels=model_cfg["hidden_channels"],
+            kernel_size=model_cfg["kernel_size"],
+            padding=model_cfg["padding"],
+            depth=model_cfg["depth"],
+            predict_residual=model_cfg["predict_residual"],
+            residual_scale=model_cfg["residual_scale"],
+            post_nl=model_cfg["post_nl"]
         )
     else:
         raise ValueError(f"Unknown model name: {name}")

@@ -1,5 +1,5 @@
 project:
-  run_name: d6_resnet_retry
+  run_name: resnet_no_post_nl
   seed: 42
   output_dir: checkpoints/
 
@@ -9,7 +9,7 @@ data:
   lead_steps: 1
   flatten_time: true
 
-  batch_size: 64
+  batch_size: 32
   num_workers: 0
   pin_memory: false
 
@@ -17,17 +17,18 @@ model:
   architecture: deepresnet
   in_channels: 16
   out_channels: 4
-  hidden_channels: 128
-  kernel_size: 5
-  padding: 2
-  depth: 6
-  predict_residual: false
-  residual_scale: 1.0
+  hidden_channels: 96
+  kernel_size: 3
+  padding: 1
+  depth: 8
+  predict_residual: true
+  residual_scale: 0.2
+  post_nl: false
 
 optimizer:
   name: adamw
   lr: 0.005
-  weight_decay: 0.000001
+  weight_decay: 0.0001
 
 training:
   epochs: 3
@@ -40,5 +41,5 @@ training:
 mlflow:
   enabled: true
   tracking_uri: sqlite:///mlflow.db
-  experiment_name: multi_epoch_debug
+  experiment_name: base_resnet_models
   artifact_dir: mlartifacts
