@@ -59,7 +59,6 @@ def compute_validation_loss(model, loss_fn, val_loader, device):
     N = 0
     val_loss = 0
 
-    model.eval()
     for xb, yb in val_loader:
         xb = xb.to(device)
         yb = yb.to(device)

@@ -97,6 +97,7 @@ def train(config):
                         )
 
                 if global_step % val_every == 0:
+                    model.eval()
                     validation_loss = compute_validation_loss(
                         model=model,
                         loss_fn=loss_fn,
@@ -112,6 +113,7 @@ def train(config):
                         )
                         for k, v in val_metrics.items():
                             mlflow.log_metric(f"val/{k}", float(v), step=global_step)
+                    model.train()
 
                     improved = early_stopper.step(validation_loss)
                     if improved:
@@ -157,12 +159,14 @@ def train(config):
 
                     print(f"Step {global_step}, validation loss={validation_loss:.6f}")
 
+    model.eval()
     validation_loss = compute_validation_loss(
         model=model,
         loss_fn=loss_fn,
         val_loader=val_loader,
         device=device,
     )
+    model.train()
     save_checkpoint(
         path=ckpt_dir / "last.pt",
         model=model,

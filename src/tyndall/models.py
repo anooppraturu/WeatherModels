@@ -31,6 +31,7 @@ class ResidualBlock(nn.Module):
                 kernel_size=kernel_size,
                 padding=padding,
             ),
+            nn.BatchNorm2d(channels),
             nn.GELU(),
             nn.Conv2d(
                 in_channels=channels,
@@ -38,6 +39,7 @@ class ResidualBlock(nn.Module):
                 kernel_size=kernel_size,
                 padding=padding,
             ),
+            nn.BatchNorm2d(channels)
         )
         self.act = nn.GELU()
 
