@@ -43,6 +43,10 @@ def train(config):
     val_every = config["training"]["val_every"]
     ckpt_dir = Path(config["project"]["output_dir"]) / config["project"]["run_name"]
     ckpt_dir.mkdir(parents=True, exist_ok=True)
+    # log config to checkpoint dir
+    config_path = ckpt_dir / "config.yaml"
+    with open(str(config_path), "w") as file:
+        yaml.safe_dump(config, file, sort_keys=False)
 
     print(f"Training for {epochs} epochs on device {device}")
 
@@ -71,6 +75,7 @@ def train(config):
 
             for k, v in flat_config.items():
                 mlflow.log_param(k, v)
+            mlflow.log_artifact(str(config_path), artifact_path="config")
 
         for epoch in range(epochs):
             model.train()
@@ -159,34 +164,34 @@ def train(config):
 
                     print(f"Step {global_step}, validation loss={validation_loss:.6f}")
 
-    model.eval()
-    validation_loss = compute_validation_loss(
-        model=model,
-        loss_fn=loss_fn,
-        val_loader=val_loader,
-        device=device,
-    )
-    model.train()
-    save_checkpoint(
-        path=ckpt_dir / "last.pt",
-        model=model,
-        optimizer=optimizer,
-        epoch=epoch,
-        global_step=global_step,
-        best_metric=validation_loss,
-    )
+        model.eval()
+        validation_loss = compute_validation_loss(
+            model=model,
+            loss_fn=loss_fn,
+            val_loader=val_loader,
+            device=device,
+        )
+        model.train()
+        save_checkpoint(
+            path=ckpt_dir / "last.pt",
+            model=model,
+            optimizer=optimizer,
+            epoch=epoch,
+            global_step=global_step,
+            best_metric=validation_loss,
+        )
 
-    if use_mlflow:
-        mlflow.log_metric("best/val_loss", float(early_stopper.best), step=global_step)
+        if use_mlflow:
+            mlflow.log_metric("best/val_loss", float(early_stopper.best), step=global_step)
 
-        best_path = ckpt_dir / "best.pt"
-        last_path = ckpt_dir / "last.pt"
+            best_path = ckpt_dir / "best.pt"
+            last_path = ckpt_dir / "last.pt"
 
-        if best_path.exists():
-            mlflow.log_artifact(str(best_path), artifact_path="checkpoints")
+            if best_path.exists():
+                mlflow.log_artifact(str(best_path), artifact_path="checkpoints")
 
-        if last_path.exists():
-            mlflow.log_artifact(str(last_path), artifact_path="checkpoints")
+            if last_path.exists():
+                mlflow.log_artifact(str(last_path), artifact_path="checkpoints")
 
     return
 

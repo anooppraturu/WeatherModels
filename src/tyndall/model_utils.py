@@ -23,7 +23,7 @@ def autoregressive_rollout(model, x_init, nsteps, n_var=4):
 def make_rollout_gif(
     x,
     save_path,
-    variable_names=None,
+    variable_names=["T850", "U850", "V850", "Z500"],
     fps=4,
     interval=250,
     cmap="viridis",
