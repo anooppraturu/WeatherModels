@@ -37,9 +37,9 @@ def make_rmse_plots(model, dataset, roll_len, save_dir):
     fig, axs = plt.subplots(2, 2, figsize=(7.5, 7.5))
     for i, ax in enumerate(np.ravel(axs)):
         ax.errorbar(
-            x=range(len(error_mean[:,i])),
-            y=error_mean[:,i],
-            yerr=error_std[:,i],
+            x=range(len(error_mean[:, i])),
+            y=error_mean[:, i],
+            yerr=error_std[:, i],
             c=colors[i],
             lw=3,
             capsize=4,
@@ -61,7 +61,7 @@ def make_gifs(model, dataset, start_idx, roll_len, save_dir):
 
     model_trajectory = autoregressive_rollout(model=model, x_init=x0, nsteps=roll_len)
     dataset_trajectory = torch.stack(
-        [dataset[start_idx + t][0][-4:] for t in range(roll_len+1)]
+        [dataset[start_idx + t][0][-4:] for t in range(roll_len + 1)]
     )
 
     gif_path = save_dir / "rollout.gif"
@@ -74,7 +74,12 @@ def make_gifs(model, dataset, start_idx, roll_len, save_dir):
         x=model_trajectory - dataset_trajectory, save_path=gif_path, suptitle="Errors"
     )
     gif_path = save_dir / "rollout_comparison.gif"
-    make_comparison_gif(x1=model_trajectory, x2=dataset_trajectory, save_path=gif_path)
+    make_comparison_gif(
+        x1=model_trajectory,
+        x2=dataset_trajectory,
+        save_path=gif_path,
+        variable_names=labels,
+    )
 
     return
 
