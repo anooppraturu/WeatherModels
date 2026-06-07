@@ -159,22 +159,22 @@ def main():
         flatten_time=train_config["data"]["flatten_time"],
     )
 
-    # print("Computing Rollout RMSEs\n")
-    # make_rmse_plots(
-    #     model=model,
-    #     dataset=dataset,
-    #     roll_len=config["eval"]["rollout_length"],
-    #     save_dir=data_dir,
-    # )
+    print("Computing Rollout RMSEs\n")
+    make_rmse_plots(
+        model=model,
+        dataset=dataset,
+        roll_len=config["eval"]["rollout_length"],
+        save_dir=data_dir,
+    )
 
-    # print("Making Rollout GIFs\n")
-    # make_gifs(
-    #     model=model,
-    #     dataset=dataset,
-    #     start_idx=config["eval"]["start_idx"],
-    #     roll_len=config["eval"]["rollout_length"],
-    #     save_dir=data_dir,
-    # )
+    print("Making Rollout GIFs\n")
+    make_gifs(
+        model=model,
+        dataset=dataset,
+        start_idx=config["eval"]["start_idx"],
+        roll_len=config["eval"]["rollout_length"],
+        save_dir=data_dir,
+    )
 
     print("Making Spectral Plots\n")
     make_spectrum_plots(

@@ -1,5 +1,5 @@
 project:
-  run_name: weighted_loss
+  run_name: weak_reg
   seed: 42
   output_dir: checkpoints/
 
@@ -33,13 +33,13 @@ model:
 optimizer:
   name: adamw
   lr: 0.005
-  weight_decay: 0.0001
+  weight_decay: 0.0000001
 
 training:
   epochs: 3
   log_every: 20
   val_every: 100
-  patience: 5
+  patience: 10
   min_delta: 0.0
   device: auto
 
