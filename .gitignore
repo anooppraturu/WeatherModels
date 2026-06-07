@@ -3,6 +3,7 @@ checkpoints/
 data/
 scratch/
 *.db
+mlruns/
 
 # Python
 __pycache__/

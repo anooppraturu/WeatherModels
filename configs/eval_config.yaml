@@ -1,5 +1,5 @@
 eval:
-  data_dir: checkpoints/resnet_predict_res_w_scaling
+  data_dir: checkpoints/periodic_BC
   rollout_length: 25
   eval_times: [0, 10, 20, 30, 40, 50]
   eval_data_path: data/weatherbench64_shards/
