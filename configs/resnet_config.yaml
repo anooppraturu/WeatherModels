@@ -1,5 +1,5 @@
 project:
-  run_name: position_res_scale
+  run_name: weighted_loss
   seed: 42
   output_dir: checkpoints/
 
@@ -12,6 +12,9 @@ data:
   batch_size: 32
   num_workers: 0
   pin_memory: false
+
+loss:
+  type: weighted
 
 model:
   architecture: periodicresnet

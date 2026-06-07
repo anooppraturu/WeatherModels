@@ -8,7 +8,8 @@ from contextlib import nullcontext
 from torch import nn
 from torch import optim
 
-from tyndall.data import build_loaders
+from tyndall.data import build_loaders, ShardedWeatherBenchDataset
+from tyndall.losses import LatitudeWeightedMSE
 from tyndall.models import build_model
 from tyndall.training import save_checkpoint, get_device, EarlyStopping
 from tyndall.metrics import compute_validation_loss, total_variable_rmse
@@ -27,6 +28,19 @@ def build_optimizer(config, model):
         )
     else:
         raise ValueError(f"Unkown Optimizer {name}")
+    
+def get_loss(config):
+    if config["loss"]["type"] == 'mse':
+        return nn.MSELoss()
+    elif config["loss"]["type"] == 'weighted':
+        tmp_data = ShardedWeatherBenchDataset(
+            root=config["data"]["dataset_path"],
+            split="train"
+        )
+        tmp_payload = tmp_data._load_shard(0)
+        latitudes = tmp_payload["latitude"]
+        device=get_device(config["training"]["device"])
+        return LatitudeWeightedMSE(latitudes=latitudes, device=device)
 
 
 def train(config):
@@ -34,7 +48,7 @@ def train(config):
     model = build_model(config)
     train_loader, val_loader = build_loaders(config)
     optimizer = build_optimizer(config, model)
-    loss_fn = nn.MSELoss()
+    loss_fn = get_loss(config)
 
     # training configs
     device = get_device(config["training"]["device"])
