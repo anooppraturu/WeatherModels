@@ -1,7 +1,7 @@
 eval:
   data_dir: checkpoints/weighted_loss
-  rollout_length: 20
-  eval_times: [0, 10, 20, 30, 40, 50]
+  rollout_length: 25
+  eval_times: [1, 5, 10, 15, 20]
   eval_data_path: data/weatherbench64_shards/
   split: val
   start_idx: 0

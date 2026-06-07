@@ -12,7 +12,7 @@ from tyndall.model_utils import (
     make_rollout_gif,
     make_comparison_gif,
 )
-from tyndall.metrics import dataset_rollout_rmse
+from tyndall.metrics import dataset_rollout_rmse, get_spectrum
 from tyndall.data import ShardedWeatherBenchDataset
 
 mpl.rcParams.update(
@@ -56,7 +56,7 @@ def make_rmse_plots(model, dataset, roll_len, save_dir):
 
 
 def make_gifs(model, dataset, start_idx, roll_len, save_dir):
-    x0, _ = dataset[0]
+    x0, _ = dataset[start_idx]
     x0 = torch.unsqueeze(x0, 0)
 
     model_trajectory = autoregressive_rollout(model=model, x_init=x0, nsteps=roll_len)
@@ -83,6 +83,49 @@ def make_gifs(model, dataset, start_idx, roll_len, save_dir):
 
     return
 
+def make_spectrum_plots(model, dataset, start_idx, times, save_dir):
+    x0, _ = dataset[start_idx]
+    x0 = torch.unsqueeze(x0, 0)
+    T = len(times)
+
+    roll_len = max(times)
+    model_trajectory = autoregressive_rollout(model=model, x_init=x0, nsteps=roll_len)
+    dataset_trajectory = torch.stack(
+        [dataset[start_idx + t][0][-4:] for t in range(roll_len + 1)]
+    )
+
+    fig, axs = plt.subplots(T, 4, figsize=(20, 5*T))
+
+    for t in range(T):
+        error_bins, error_spec = get_spectrum(model_trajectory[times[t]] - dataset_trajectory[times[t]])
+        for i, label in enumerate(labels):
+            axs[t][i].plot(error_bins, error_spec[i], lw=7.5, c=colors[i])
+            axs[t][i].set_title(f'{label} Error Spectrum at T={times[t]}', fontsize=12.5)
+            axs[t][i].set_yscale('log')
+            axs[t][i].set_xscale('log')
+            axs[t][i].set_xlabel('$|k|$', fontsize=15)
+            axs[t][i].set_ylabel('$|\hat{e}(k)|^2$', fontsize=15)
+
+    fig.tight_layout()
+    output_path = save_dir / "error_spectrum_plots.png"
+    fig.savefig(output_path)
+    
+    fig, axs = plt.subplots(T, 4, figsize=(20, 5*T))
+
+    for t in range(T):
+        model_bins, model_spec = get_spectrum(model_trajectory[times[t]])
+        data_bins, data_spec = get_spectrum(dataset_trajectory[times[t]])
+        for i, label in enumerate(labels):
+            axs[t][i].plot(0.5*(model_bins + data_bins), model_spec[i]/data_spec[i], lw=7.5, c=colors[i])
+            axs[t][i].set_title(f'{label} Prediction/Data Power Ratio at T={times[t]}', fontsize=12.5)
+            axs[t][i].set_xlabel('$|k|$', fontsize=15)
+            axs[t][i].set_ylabel('$|\hat{m}(k)|^2 / |\hat{d}(k)|^2$', fontsize=15)
+
+    fig.tight_layout()
+    output_path = save_dir / "power_ratio_plots.png"
+    fig.savefig(output_path)
+
+   
 
 def main():
     parser = argparse.ArgumentParser()
@@ -116,20 +159,29 @@ def main():
         flatten_time=train_config["data"]["flatten_time"],
     )
 
-    print("Computing Rollout RMSEs\n")
-    make_rmse_plots(
-        model=model,
-        dataset=dataset,
-        roll_len=config["eval"]["rollout_length"],
-        save_dir=data_dir,
-    )
+    # print("Computing Rollout RMSEs\n")
+    # make_rmse_plots(
+    #     model=model,
+    #     dataset=dataset,
+    #     roll_len=config["eval"]["rollout_length"],
+    #     save_dir=data_dir,
+    # )
 
-    print("Making Rollout GIFs\n")
-    make_gifs(
+    # print("Making Rollout GIFs\n")
+    # make_gifs(
+    #     model=model,
+    #     dataset=dataset,
+    #     start_idx=config["eval"]["start_idx"],
+    #     roll_len=config["eval"]["rollout_length"],
+    #     save_dir=data_dir,
+    # )
+
+    print("Making Spectral Plots\n")
+    make_spectrum_plots(
         model=model,
         dataset=dataset,
         start_idx=config["eval"]["start_idx"],
-        roll_len=config["eval"]["rollout_length"],
+        times=config["eval"]["eval_times"],
         save_dir=data_dir,
     )
 
