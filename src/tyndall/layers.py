@@ -1,5 +1,7 @@
 from torch import nn
 import torch.nn.functional as F
+import torch
+
 
 class LayerNorm2D(nn.Module):
     def __init__(self, channels):
@@ -7,8 +9,8 @@ class LayerNorm2D(nn.Module):
         self.ln = nn.LayerNorm(channels)
 
     def forward(self, x):
-        #input (B, C, H, W)
-        #permute to (B, H, W, C) since layernorm acts on last dimension
+        # input (B, C, H, W)
+        # permute to (B, H, W, C) since layernorm acts on last dimension
         x = x.permute(0, 2, 3, 1).contiguous()
         x = self.ln(x)
         # permute back
@@ -44,10 +46,28 @@ class MixedPeriodicConv2D(nn.Module):
 
 class ResidualBlock(nn.Module):
     def __init__(
-        self, channels, kernel_size=3, padding=1, residual_scale=1.0, post_nl=True
+        self,
+        channels,
+        kernel_size=3,
+        padding=1,
+        residual_scale=1.0,
+        scale_mode="block",
+        post_nl=True,
     ):
         super().__init__()
-        self.residual_scale = residual_scale
+
+        if scale_mode == "fixed":
+            self.residual_scale = residual_scale
+        elif scale_mode == "block":
+            self.residual_scale = nn.Parameter(torch.tensor(float(residual_scale)))
+        elif scale_mode == "channel":
+            self.residual_scale = nn.Parameter(
+                torch.full((1, channels, 1, 1), residual_scale)
+            )
+        elif scale_mode == "position":
+            self.residual_scale = nn.Parameter(
+                torch.full((1, 1, 32, 64), residual_scale)
+            )
 
         self.net = nn.Sequential(
             nn.Conv2d(
@@ -73,14 +93,32 @@ class ResidualBlock(nn.Module):
 
     def forward(self, x):
         return self.act(x + self.residual_scale * self.net(x))
-    
-    
+
+
 class PeriodicResidualBlock(nn.Module):
     def __init__(
-        self, channels, kernel_size=3, residual_scale=1.0, post_nl=True, lat_pad_mode='reflect'
+        self,
+        channels,
+        kernel_size=3,
+        residual_scale=1.0,
+        scale_mode='block',
+        post_nl=True,
+        lat_pad_mode="reflect",
     ):
         super().__init__()
-        self.residual_scale = residual_scale
+       
+        if scale_mode == "fixed":
+            self.residual_scale = residual_scale
+        elif scale_mode == "block":
+            self.residual_scale = nn.Parameter(torch.tensor(float(residual_scale)))
+        elif scale_mode == "channel":
+            self.residual_scale = nn.Parameter(
+                torch.full((1, channels, 1, 1), residual_scale)
+            )
+        elif scale_mode == "position":
+            self.residual_scale = nn.Parameter(
+                torch.full((1, 1, 32, 64), residual_scale)
+            )
 
         self.net = nn.Sequential(
             MixedPeriodicConv2D(

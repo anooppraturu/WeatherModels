@@ -1,6 +1,5 @@
 from torch import nn
-import torch.nn.functional as F
-from .layers import LayerNorm2D, MixedPeriodicConv2D, ResidualBlock, PeriodicResidualBlock
+from .layers import MixedPeriodicConv2D, ResidualBlock, PeriodicResidualBlock
 
 
 class ConvModel(nn.Module):
@@ -32,6 +31,7 @@ class DeepResNet(nn.Module):
         depth=5,
         predict_residual=True,
         residual_scale=1.0,
+        scale_mode = 'block',
         post_nl=True,
     ):
         super().__init__()
@@ -56,6 +56,7 @@ class DeepResNet(nn.Module):
                     kernel_size=kernel_size,
                     padding=padding,
                     residual_scale=residual_scale,
+                    scale_mode=scale_mode,
                     post_nl=post_nl,
                 )
             )
@@ -89,6 +90,7 @@ class PeriodicResNet(nn.Module):
         depth=5,
         predict_residual=True,
         residual_scale=1.0,
+        scale_mode='block',
         post_nl=True,
         lat_pad_mode='reflect'
     ):
@@ -114,6 +116,7 @@ class PeriodicResNet(nn.Module):
                     kernel_size=kernel_size,
                     residual_scale=residual_scale,
                     post_nl=post_nl,
+                    scale_mode=scale_mode,
                     lat_pad_mode=lat_pad_mode
                 )
             )
@@ -152,6 +155,7 @@ def build_model(config):
             depth=model_cfg["depth"],
             predict_residual=model_cfg["predict_residual"],
             residual_scale=model_cfg["residual_scale"],
+            scale_mode=model_cfg["scale_mode"],
             post_nl=model_cfg["post_nl"],
         )
     elif name == 'periodicresnet':
@@ -163,6 +167,7 @@ def build_model(config):
             depth=model_cfg["depth"],
             predict_residual=model_cfg["predict_residual"],
             residual_scale=model_cfg["residual_scale"],
+            scale_mode=model_cfg["scale_mode"],
             post_nl=model_cfg["post_nl"],
             lat_pad_mode=model_cfg.get("lat_pat_mode", "reflect")
         )

@@ -1,5 +1,5 @@
 project:
-  run_name: ln_2d
+  run_name: position_res_scale
   seed: 42
   output_dir: checkpoints/
 
@@ -23,6 +23,7 @@ model:
   depth: 8
   predict_residual: true
   residual_scale: 0.2
+  scale_mode: position
   post_nl: true
   lat_pat_mode: reflect
 
