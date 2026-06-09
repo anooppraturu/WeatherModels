@@ -1,5 +1,5 @@
 project:
-  run_name: weak_reg
+  run_name: efficient_lat_channel_2
   seed: 42
   output_dir: checkpoints/
 
@@ -8,6 +8,7 @@ data:
   input_steps: 4
   lead_steps: 1
   flatten_time: true
+  lat_channels: true
 
   batch_size: 32
   num_workers: 0
@@ -18,7 +19,7 @@ loss:
 
 model:
   architecture: periodicresnet
-  in_channels: 16
+  in_channels: 18
   out_channels: 4
   hidden_channels: 96
   kernel_size: 3
@@ -36,7 +37,7 @@ optimizer:
   weight_decay: 0.0000001
 
 training:
-  epochs: 3
+  epochs: 4
   log_every: 20
   val_every: 100
   patience: 10

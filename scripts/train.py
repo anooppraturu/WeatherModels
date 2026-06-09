@@ -99,7 +99,7 @@ def train(config):
             for xb, yb in pbar:
                 xb = xb.to(device)
                 yb = yb.to(device)
-                
+
                 optimizer.zero_grad(set_to_none=True)
                 preds = model(xb)
                 loss = loss_fn(preds, yb)

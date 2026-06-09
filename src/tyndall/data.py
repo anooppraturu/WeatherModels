@@ -13,7 +13,8 @@ class ShardedWeatherBenchDataset(Dataset):
         lead_steps = 1,
         flatten_time = False,
         return_time = False,
-        cache_size = 2
+        cache_size = 2,
+        lat_channels=False
     ):
         """
         root:
@@ -46,6 +47,7 @@ class ShardedWeatherBenchDataset(Dataset):
         self.flatten_time = flatten_time
         self.return_time = return_time
         self.cache_size = cache_size
+        self.lat_channels = lat_channels
 
         with open(self.root / "metadata.json", "r") as f:
             self.metadata = json.load(f)
@@ -72,7 +74,15 @@ class ShardedWeatherBenchDataset(Dataset):
             for t in range(first_t, last_t_exclusive):
                 self.indices.append((shard_id, t))
 
-            self._cache = OrderedDict()
+        self._cache = OrderedDict()
+
+        if self.lat_channels:
+            tmp_load = self._load_shard(0)
+            T, V, H, W = tmp_load["data"].shape
+            lat = torch.deg2rad(torch.as_tensor(tmp_load["latitude"]))
+            sin_lat = torch.sin(lat).view(1, H, 1).expand(1, H, W)
+            cos_lat = torch.cos(lat).view(1, H, 1).expand(1, H, W)
+            self.lat_feature = torch.cat([sin_lat, cos_lat], dim=0)
 
     def __len__(self):
         return len(self.indices)
@@ -106,7 +116,9 @@ class ShardedWeatherBenchDataset(Dataset):
 
         if self.flatten_time:
             x = x.reshape(-1, x.shape[-2], x.shape[-1])
-
+            if self.lat_channels:
+                x = torch.cat([x, self.lat_feature], dim=0)
+                
         if self.return_time:
             target_time = payload["times"][t+self.lead_steps]
             return x, y, target_time
@@ -145,7 +157,7 @@ class WeatherBenchMapDataset(Dataset):
 
         if self.flatten_time:
             x = x.reshape(-1, x.shape[-2], x.shape[-1])
-
+    
 
 def build_loaders(config):
     data_cfg = config["data"]
@@ -156,6 +168,7 @@ def build_loaders(config):
         input_steps=data_cfg["input_steps"],
         lead_steps=data_cfg["lead_steps"],
         flatten_time=data_cfg["flatten_time"],
+        lat_channels=data_cfg["lat_channels"]
     )
     val_dataset = ShardedWeatherBenchDataset(
         root=data_cfg["dataset_path"],
@@ -163,6 +176,7 @@ def build_loaders(config):
         input_steps=data_cfg["input_steps"],
         lead_steps=data_cfg["lead_steps"],
         flatten_time=data_cfg["flatten_time"],
+        lat_channels=data_cfg["lat_channels"]
     )
 
     train_loader = DataLoader(
@@ -181,3 +195,4 @@ def build_loaders(config):
     )
 
     return train_loader, val_loader
+    

@@ -1,5 +1,5 @@
 eval:
-  data_dir: checkpoints/weighted_loss
+  data_dir: checkpoints/weak_reg
   rollout_length: 25
   eval_times: [1, 5, 10, 15, 20]
   eval_data_path: data/weatherbench64_shards/
