@@ -112,7 +112,7 @@ class ShardedWeatherBenchDataset(Dataset):
 
         # (time, variable, latitude, longitude)
         x = data[t-self.input_steps + 1: t+1]
-        y = data[t+self.lead_steps]
+        y = data[t+1:t+self.lead_steps+1].squeeze()
 
         if self.flatten_time:
             x = x.reshape(-1, x.shape[-2], x.shape[-1])

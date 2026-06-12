@@ -1,5 +1,5 @@
 project:
-  run_name: efficient_lat_channel_2
+  run_name: lat_channel_small_lr
   seed: 42
   output_dir: checkpoints/
 
@@ -8,7 +8,7 @@ data:
   input_steps: 4
   lead_steps: 1
   flatten_time: true
-  lat_channels: true
+  lat_channels: false
 
   batch_size: 32
   num_workers: 0
@@ -33,7 +33,7 @@ model:
 
 optimizer:
   name: adamw
-  lr: 0.005
+  lr: 0.0025
   weight_decay: 0.0000001
 
 training:
