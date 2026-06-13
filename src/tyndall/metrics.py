@@ -80,6 +80,25 @@ def compute_validation_loss(model, loss_fn, val_loader, device):
 
     return val_loss / N
 
+@torch.no_grad()
+def compute_rollout_validation_loss(model, loss_fn, val_loader, device, predictor_fn, nsteps):
+    N = 0
+    val_loss = 0
+
+    for xb, yb in val_loader:
+        xb = xb.to(device)
+        yb = yb.to(device)
+
+        B = xb.shape[0]
+        N += B
+
+        preds = model(xb)
+        preds = predictor_fn(model=model, xb=xb, nsteps=nsteps)
+        loss = loss_fn(preds, yb)
+        val_loss += B*loss.item()
+
+    return val_loss / N
+
 def dataset_rollout_rmse(model, dataset, roll_len = 50):
     V, _, _ = dataset[0][0].shape
     V = int(V / 4)

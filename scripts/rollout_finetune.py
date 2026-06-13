@@ -12,7 +12,7 @@ from tyndall.data import build_loaders, ShardedWeatherBenchDataset
 from tyndall.losses import RolloutWeightedMSE
 from tyndall.models import build_model
 from tyndall.training import save_checkpoint, get_device#, EarlyStopping
-# from tyndall.metrics import compute_validation_loss, total_variable_rmse
+from tyndall.metrics import compute_rollout_validation_loss
 from tyndall.utils import flatten_dict
 
 
@@ -41,12 +41,15 @@ def get_loss(config):
     
 
 def nstep_predictor(model, xb, nsteps, n_var=4):
-    # xb: (B, V, H, W)
+    assert xb.ndim == 4
+    assert xb.shape[1] % n_var == 0
+
+    # xb: (B, input_steps * V, H, W)
     prediction = []
     for _ in range(nsteps):
         x_next = model(xb)
         prediction.append(x_next)
-        xb = torch.cat([xb[:,-3*n_var:], x_next], dim=1)
+        xb = torch.cat([xb[:,n_var:], x_next], dim=1)
 
     return torch.stack(prediction, dim=1)
 
@@ -62,7 +65,7 @@ def fine_tune(model, config):
     device = get_device(config["training"]["device"])
     epochs = config["training"]["epochs"]
     log_every = config["training"]["log_every"]
-    # val_every = config["training"]["val_every"]
+    val_every = config["training"]["val_every"]
     ckpt_dir = Path(config["model"]["data_dir"]) / config["model"]["run_name"]
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     # log config to checkpoint dir
@@ -105,7 +108,7 @@ def fine_tune(model, config):
                 yb = yb.to(device)
 
                 optimizer.zero_grad(set_to_none=True)
-                preds = nstep_predictor(model=model, xb=xb, nsteps=2)
+                preds = nstep_predictor(model=model, xb=xb, nsteps=config["data"]["lead_steps"])
                 loss = loss_fn(preds, yb)
                 loss.backward()
                 optimizer.step()
@@ -118,6 +121,24 @@ def fine_tune(model, config):
                         mlflow.log_metric(
                             "train/loss", float(loss.item()), step=global_step
                         )
+
+                if global_step % val_every == 0:
+                    model.eval()
+                    validation_loss = compute_rollout_validation_loss(
+                        model=model,
+                        loss_fn=loss_fn,
+                        val_loader=val_loader,
+                        device=device,
+                        predictor_fn=nstep_predictor,
+                        nsteps=config["data"]["lead_steps"]
+                    )
+                    if use_mlflow:
+                        mlflow.log_metric(
+                            "val/loss", float(validation_loss), step=global_step
+                        )
+                    model.train()
+
+                    print(f"Step {global_step}, validation loss={validation_loss:.6f}")
 
                 
         save_checkpoint(

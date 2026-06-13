@@ -1,6 +1,6 @@
 model:
   data_dir: checkpoints/weak_reg
-  run_name: n2_ft
+  run_name: n3_ft_smalllr
 
 data:
   dataset_path: data/weatherbench64_shards
@@ -23,7 +23,7 @@ training:
 
 optimizer:
   name: adamw
-  lr: 0.005
+  lr: 0.001
   weight_decay: 0.0000001
 
 mlflow:
